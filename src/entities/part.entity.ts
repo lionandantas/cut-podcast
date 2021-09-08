@@ -23,7 +23,7 @@ export default class Part {
   @Column({ name: 'name' })
   name: string;
 
-  @Column({ name: 'tags' })
+  @Column({ name: 'tags', type: 'text' })
   tags: string;
 
   @Column({ name: 'path', default: null, type: 'text' })

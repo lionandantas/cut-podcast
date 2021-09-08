@@ -12,7 +12,8 @@ export default class Utility {
       .toString()
       .toLowerCase()
       .replace('', '')
-      .replace(/\s+/g, '');
+      .replace(/\s+/g, '')
+      .replace('|', '-');
   }
 
   public static getFolderVideoDownloaded(name: string): string {
