@@ -1,13 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { AppService } from 'src/app.service';
-import * as fs from 'fs';
-import { resolve, join } from 'path';
 import * as ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import * as ffmpeg from 'fluent-ffmpeg';
 import Part from 'src/entities/part.entity';
-import Video from 'src/entities/video.entity';
-import * as moment from 'moment';
+import Utility from '../utility';
 
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
@@ -36,96 +33,11 @@ export class SliceVideoService {
 
   constructor(private service: AppService) {}
 
-  async teste() {
-    try {
-      const video = await this.service.findVideoToSlice();
-      const item = video.parts[0];
-      const time_start = new Date();
-      const time_end = new Date();
-      const value_start = item.startTime.split(':');
-      const value_end = item.endTime.split(':');
-
-      time_start.setHours(
-        Number(value_start[0]),
-        Number(value_start[1]),
-        Number(value_start[2]),
-        0,
-      );
-      time_end.setHours(
-        Number(value_end[0]),
-        Number(value_end[1]),
-        Number(value_end[2]),
-        0,
-      );
-      const folderNameByVideo = video.title
-        .trim()
-        .trimEnd()
-        .trimStart()
-        .split(' ')
-        .join('')
-        .toString()
-        .toLowerCase()
-        .replace('', '')
-        .replace(/\s+/g, '');
-      const nameVideo = `${folderNameByVideo}.mp4`;
-      const dirVideo = join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        `temp/${folderNameByVideo}`,
-      );
-      const duration = Math.round(
-        Number(time_end) - Number(time_start) / 1000.0,
-      );
-      const res = Math.abs(Number(time_end) - Number(time_start)) / 1000;
-      const seconds = res % 60;
-      const file = `teste.mp4`;
-      const pathVideo = `teste01`;
-
-      const localFileVideo = resolve(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'temp',
-        dirVideo,
-        `${dirVideo}/${nameVideo}`,
-      );
-      const localSlices = resolve(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'temp',
-        folderNameByVideo,
-        'slices',
-        pathVideo,
-      );
-      console.log(`PATH ${localSlices}`);
-
-      if (!fs.existsSync(localSlices)) {
-        fs.mkdirSync(localSlices, { recursive: true });
-      }
-
-      const sliceResult = await this.sliceVideo({
-        duration: 10,
-        startTime: moment(time_start).format('HH:mm:ss'),
-        output: localSlices,
-        file: localFileVideo,
-        name: file,
-        record: item,
-      });
-      return sliceResult;
-    } catch (err) {
-      console.log(`DEU ERRO ${err.message}`);
-    }
-  }
   @Cron('*/1 * * * *')
   async handleCron() {
-    this.logger.debug('cut videos');
+    this.logger.debug('REALIZAR OS CORTES DOS PODCAST');
     if (taskRunning) {
-      console.log('returning');
+      console.log('JÁ POSSUI VIDEOS SENDO CORTADOS');
       return;
     }
 
@@ -133,95 +45,38 @@ export class SliceVideoService {
       const video = await this.service.findVideoToSlice();
       if (video != null) {
         taskRunning = true;
-        this.logger.debug('EXISTE VIDEO PARA CORTAR');
-        this.logger.debug(`ESSE VIDEO POSSUI ${video.parts.length} CORTES`);
+        this.logger.warn('EXISTE VIDEO PARA CORTAR');
+        this.logger.warn(`ESSE VIDEO POSSUI ${video.parts.length} CORTES`);
         try {
           countSlice = video.parts.length;
-          const promises = video.parts.map(async (item, idx) => {
-            const time_start = new Date();
-            const time_end = new Date();
-            const value_start = item.startTime.split(':');
-            const value_end = item.endTime.split(':');
+          const promises = video.parts.map(async (item) => {
+            const duration = Utility.durationVideo(
+              item.startTime,
+              item.endTime,
+            );
 
-            time_start.setHours(
-              Number(value_start[0]),
-              Number(value_start[1]),
-              Number(value_start[2]),
-              0,
+            const pathCorte = Utility.getLocalVideoSliced(
+              video.title,
+              item.name,
             );
-            time_end.setHours(
-              Number(value_end[0]),
-              Number(value_end[1]),
-              Number(value_end[2]),
-              0,
-            );
-            const folderNameByVideo = video.title
-              .trim()
-              .trimEnd()
-              .trimStart()
-              .split(' ')
-              .join('')
-              .toString()
-              .toLowerCase()
-              .replace('', '')
-              .replace(/\s+/g, '');
-            const nameVideo = `${folderNameByVideo}.mp4`;
-            const dirVideo = join(
-              __dirname,
-              '..',
-              '..',
-              '..',
-              `temp/${folderNameByVideo}`,
-            );
-            const duration = Math.round(
-              Number(time_end) - Number(time_start) / 1000.0,
-            );
-            const res = Math.abs(Number(time_end) - Number(time_start)) / 1000;
-            const seconds = res % 60;
-            const file = `${this.removeCharacters(item.name)
-              .toLowerCase()
-              .replace(/\s+/g, '-')}.mp4`;
-            const pathVideo = `${this.removeCharacters(item.name)
-              .toLowerCase()
-              .replace(/\s+/g, '-')}`;
-
-            const localFileVideo = resolve(
-              __dirname,
-              '..',
-              '..',
-              '..',
-              'temp',
-              dirVideo,
-              `${dirVideo}/${nameVideo}`,
-            );
-            const localSlices = resolve(
-              __dirname,
-              '..',
-              '..',
-              '..',
-              'temp',
-              folderNameByVideo,
-              'slices',
-              pathVideo,
-            );
-            if (!fs.existsSync(localSlices)) {
-              fs.mkdirSync(localSlices, { recursive: true });
-            }
-
+            const localVideo = Utility.getLocalVideoDownloaded(video.title);
+            const nameFileSliced = Utility.getNameSlice(item.name);
             const sliceResult = await this.sliceVideo({
-              duration: res,
+              duration: duration,
               startTime: item.startTime,
-              output: localSlices,
-              file: localFileVideo,
-              name: file,
+              output: pathCorte,
+              file: localVideo,
+              name: Utility.getNameSlice(item.name),
               record: item,
             });
             if (sliceResult.Success) {
-              item.path = `${item.path}/slices/${file}`;
-              item.file = file;
+              item.path = Utility.getFullLocalVideoSliced(
+                video.title,
+                item.name,
+              );
+              item.file = nameFileSliced;
               item.sliced = true;
               item = await this.service.savePart(item);
-              console.log(`SLICE ${countSlice} | SLICED ${countSliced}`);
               countSliced++;
             } else {
               countSliced++;
@@ -229,24 +84,31 @@ export class SliceVideoService {
           });
           await Promise.all(promises);
         } catch (err) {
-          console.log(`MSG ERROR: ${err.message}`);
+          this.logger.error(`ERRO -> ${err.message}`);
         } finally {
-          console.log(`FINALIZOU`);
-          console.log(`SLICE ${countSlice} | SLICED ${countSliced}`);
+          this.logger.warn(`FINALIZOU`);
+          this.logger.warn(`SLICE ${countSlice} | SLICED ${countSliced}`);
           if (countSlice == countSliced) {
-            video.finished = true;
+            video.sliced = true;
             await this.service.save(video);
-            taskRunning = false;
+            this.reset();
           }
         }
       } else {
-        this.logger.warn('NÃO EXISTE VIDEO PARA REALIZAR O CORTE');
+        this.logger.log('NÃO EXISTE VIDEO PARA REALIZAR O CORTE');
       }
     } catch (err) {
       this.logger.error(`ERRO AO REALIZAR O CORTE ${err.message}`);
     }
   }
-
+  getPathVideo(): string {
+    return '';
+  }
+  reset() {
+    taskRunning = false;
+    countSliced = 0;
+    countSlice = 0;
+  }
   removeCharacters = function (params) {
     return params.replace('?', '');
   };
@@ -254,7 +116,7 @@ export class SliceVideoService {
     const { duration, startTime, output, file, name, record } = params;
 
     const link = output + '\\' + name;
-    return new Promise<ResultSlice>((resolve, reject) => {
+    return new Promise<ResultSlice>((resolve) => {
       this.logger.debug(`***********INICIO*************${startTime}`);
       this.logger.debug(`***********DURACAO*************${duration}`);
       ffmpeg(file)

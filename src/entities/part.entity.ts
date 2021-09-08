@@ -44,6 +44,12 @@ export default class Part {
   @Column({ name: 'uploaded', default: false })
   uploaded: boolean;
 
+  @Column({ name: 'has_thumbnail', default: false })
+  hasThumbnail: boolean;
+
+  @Column({ name: 'has_description', default: false })
+  hasDescription: boolean;
+
   @UpdateDateColumn({ name: 'updated_at', nullable: true })
   updatedAt: Date;
 

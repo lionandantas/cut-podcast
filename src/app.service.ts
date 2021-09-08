@@ -81,4 +81,24 @@ export class AppService {
       relations: ['parts'],
     });
   }
+
+  async findPartToGenerateThumbnail(): Promise<Part | null> {
+    return await this.partRepository.findOne({
+      where: {
+        sliced: true,
+        hasThumbnail: false,
+      },
+      relations: ['video'],
+    });
+  }
+
+  async findPartToGenerateDescription(): Promise<Part | null> {
+    return await this.partRepository.findOne({
+      where: {
+        sliced: true,
+        hasDescription: false,
+      },
+      relations: ['video'],
+    });
+  }
 }

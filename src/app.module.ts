@@ -10,6 +10,8 @@ import Video from './entities/video.entity';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SliceVideoService } from './slice-video/slice-video.service';
+import { CreateThumbnailService } from './create-thumbnail/create-thumbnail.service';
+import { GenerateDescriptionService } from './generate-description/generate-description.service';
 
 @Module({
   imports: [
@@ -38,6 +40,6 @@ import { SliceVideoService } from './slice-video/slice-video.service';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, DownloadVideoService, SliceVideoService],
+  providers: [AppService, DownloadVideoService, SliceVideoService, CreateThumbnailService, GenerateDescriptionService],
 })
 export class AppModule {}

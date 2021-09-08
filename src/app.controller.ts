@@ -18,7 +18,7 @@ export class AppController {
 
   @Get()
   async getHello(): Promise<any> {
-    return await this.slice.teste();
+    return true;
   }
 
   @Post()
