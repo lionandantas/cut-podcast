@@ -11,6 +11,7 @@ let taskRunning = false;
 
 import * as cliProgress from 'cli-progress';
 import Utility from './utility';
+import { YouTubeVideo } from './utility/video';
 
 const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 @Injectable()
@@ -55,8 +56,17 @@ export class AppService {
           // createdVideo createdVideo.parts.push(x);
         }),
       );
-      await this.download();
-      return true;
+
+      const nomeVideo = Utility.getLocalVideoDownloadedMP3(video.title);
+
+      const youTubeVideo = new YouTubeVideo(video.url);
+
+      console.log(`NOME VIDEO -> ${nomeVideo}`);
+      video.initiated = true;
+      await this.save(video);
+      await youTubeVideo.save(true, nomeVideo);
+      video.downloaded = true;
+      return await this.save(video);
     } catch (e) {
       console.log(`ERRO ${JSON.stringify(e)}`);
       return false;

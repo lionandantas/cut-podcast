@@ -5,6 +5,8 @@ import VideoDTO from './dtos/video.dto';
 import * as ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import * as ffmpeg from 'fluent-ffmpeg';
 import { SliceVideoService } from './slice-video/slice-video.service';
+import Utility from './utility';
+import { YouTubeVideo } from './utility/video';
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 @Controller()
@@ -18,6 +20,16 @@ export class AppController {
 
   @Get()
   async getHello(): Promise<any> {
+    console.log('PASSO 1');
+    const name = 'video_lionan_teste';
+
+    const nomeVideo = Utility.getLocalVideoDownloadedMP3(name);
+
+    const teste = new YouTubeVideo(
+      'https://www.youtube.com/watch?v=r4zEZrOtIXI',
+    );
+    console.log(`NOME VIDEO -> ${nomeVideo}`);
+    teste.save(true, nomeVideo);
     return true;
   }
 
