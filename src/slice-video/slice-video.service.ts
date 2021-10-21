@@ -120,6 +120,9 @@ export class SliceVideoService {
       this.logger.debug(`***********INICIO*************${startTime}`);
       this.logger.debug(`***********DURACAO*************${duration}`);
       ffmpeg(file)
+        .size('1920x1080')
+        .audioBitrate('320k')
+        .audioChannels(2)
         .setStartTime(startTime)
         .setDuration(duration)
         .output(link)

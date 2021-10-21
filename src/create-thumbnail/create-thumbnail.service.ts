@@ -27,7 +27,7 @@ export class CreateThumbnailService {
     this.logger.log('*****GERAR THUMBNAIL*****');
   }
 
-  // @Cron('*/1 * * * *')
+  //S@Cron('*/1 * * * *')
   async handleCron() {
     try {
       if (taskRunning) {

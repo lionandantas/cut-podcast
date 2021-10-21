@@ -4,6 +4,8 @@ import * as fs from 'fs';
 export default class Utility {
   public static removeCharacters(name: string): string {
     return name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .trimEnd()
       .trimStart()
@@ -54,17 +56,26 @@ export default class Utility {
   }
 
   public static getNameSlice(name: string): string {
-    const file = `${name.toLowerCase().replace(/\s+/g, '-')}.mp4`;
+    const file = `${name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace('|', '')}.mp4`;
 
     return file;
   }
   public static getNameThumbnail(name: string): string {
-    const file = `${name.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+    const file = `${name
+      .toLowerCase()
+      .replace('|', '')
+      .replace(/\s+/g, '-')}.jpg`;
 
     return file;
   }
   public static getNameDescription(name: string): string {
-    const file = `${name.toLowerCase().replace(/\s+/g, '-')}.txt`;
+    const file = `${name
+      .toLowerCase()
+      .replace('|', '')
+      .replace(/\s+/g, '-')}.txt`;
 
     return file;
   }
